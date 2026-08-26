@@ -127,6 +127,14 @@ def test_extract_github_urls_deduplicates_and_ignores_trailing_punctuation() -> 
     assert extract_github_urls(f"Proof: {url}. Duplicate: {url})") == [url]
 
 
+def test_extract_github_urls_does_not_downgrade_unsupported_paths_to_a_repository() -> None:
+    text = (
+        "Run https://github.com/flop-labs/technocore-chat/actions/runs/123 and "
+        "file https://github.com/flop-labs/technocore-chat/blob/main/src/app.py"
+    )
+    assert extract_github_urls(text) == []
+
+
 def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
     view = {
         "room": "technocore",

@@ -11,7 +11,7 @@ from .github import GitHubRef, parse_url
 
 _GITHUB_URL = re.compile(
     r"https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"
-    r"(?:/(?:issues|pull|commit)/[A-Za-z0-9_.-]+)?"
+    r"(?:/(?:issues|pull|commit)/[A-Za-z0-9_.-]+)?(?![/A-Za-z0-9_.-])"
 )
 
 
