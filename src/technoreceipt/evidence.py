@@ -44,11 +44,22 @@ def _sha(value: object) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def project_relationship(snapshot: dict) -> tuple[bool, str]:
+    """Classify whether the inspected artifact itself is connected to Technocore."""
+    repository = str(snapshot.get("repository", "")).lower()
+    if repository == _OFFICIAL_REPO:
+        return True, "official_repository"
+    title_body = f"{snapshot.get('title', '')}\n{snapshot.get('body', '')}"
+    if _PROJECT_RE.search(title_body):
+        return True, "artifact_mentions_technocore"
+    return False, "artifact_has_no_technocore_relationship"
+
+
 def assess(snapshot: dict, claim: str, claimed_by: str) -> dict:
     title_body = f"{snapshot.get('title', '')}\n{snapshot.get('body', '')}"
     comments = snapshot.get("comments") if isinstance(snapshot.get("comments"), list) else []
+    project_related, _ = project_relationship(snapshot)
     official_target = str(snapshot.get("repository", "")).lower() == _OFFICIAL_REPO
-    explicit_reference = bool(_PROJECT_RE.search(title_body))
     author_match = str(snapshot.get("author", "")).lower() == claimed_by.lower()
     relevant_comment_authors = {
         str(comment.get("author", "")).lower()
@@ -60,7 +71,6 @@ def assess(snapshot: dict, claim: str, claimed_by: str) -> dict:
     # A comment can establish participation in the official repository. It cannot turn an
     # unrelated third-party issue into Technocore evidence merely by dropping the keyword there.
     actor_relationship = author_match or (official_target and commenter_match)
-    project_relationship = official_target or explicit_reference
     claim_terms = _tokens(claim)
     evidence_terms = _tokens(title_body)
     if official_target:
@@ -77,7 +87,7 @@ def assess(snapshot: dict, claim: str, claimed_by: str) -> dict:
 
     checks = {
         "artifact_exists": True,
-        "project_relationship": project_relationship,
+        "project_relationship": project_related,
         "actor_relationship": actor_relationship,
         "claim_supported": claim_supported,
     }

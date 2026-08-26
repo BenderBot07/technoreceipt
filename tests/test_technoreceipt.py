@@ -5,6 +5,7 @@ import copy
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+from technoreceipt.audit import audit_room_snapshot, extract_github_urls
 from technoreceipt.did import public_did, public_key_from_did, sign_receipt, verify_receipt
 from technoreceipt.evidence import assess
 from technoreceipt.github import parse_url
@@ -107,3 +108,50 @@ def test_did_round_trip() -> None:
 )
 def test_parse_supported_urls(url: str, kind: str) -> None:
     assert parse_url(url).kind == kind
+
+
+class _FakeGitHub:
+    def snapshot(self, ref: object) -> dict:
+        repo = f"{ref.owner}/{ref.repo}"
+        if repo == "flop-labs/technocore-chat":
+            return _snapshot(repository=repo, title="Technocore issue")
+        return _snapshot(
+            repository=repo,
+            title="Performance regression alert",
+            body="An unrelated website performance report.",
+        )
+
+
+def test_extract_github_urls_deduplicates_and_ignores_trailing_punctuation() -> None:
+    url = "https://github.com/flop-labs/technocore-chat/issues/149"
+    assert extract_github_urls(f"Proof: {url}. Duplicate: {url})") == [url]
+
+
+def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
+    view = {
+        "room": "technocore",
+        "messages": [
+            {
+                "seq": 1,
+                "from": "did:key:z6MkExample",
+                "text": "Proof https://github.com/flop-labs/technocore-chat/issues/149",
+            },
+            {
+                "seq": 2,
+                "from": "did:key:z6MkFarmer",
+                "text": "Proof https://github.com/example/site/issues/42",
+            },
+        ],
+    }
+    report = audit_room_snapshot(view, _FakeGitHub())
+    assert report["counts"] == {"related": 1, "unrelated": 1, "error": 0}
+    assert [finding["status"] for finding in report["findings"]] == [
+        "related",
+        "unrelated",
+    ]
+    assert report["findings"][1]["reason"] == "artifact_has_no_technocore_relationship"
+
+
+def test_audit_room_snapshot_requires_messages_array() -> None:
+    with pytest.raises(TypeError, match="messages array"):
+        audit_room_snapshot({"room": "technocore"}, _FakeGitHub())

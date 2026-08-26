@@ -37,6 +37,19 @@ uv run technoreceipt issue <github-url> --claim "..." --claimed-by <github-user>
 uv run technoreceipt verify contribution.receipt.json
 ```
 
+Audit a captured Technocore room window for GitHub links that do not support the claimed
+Technocore relationship:
+
+```bash
+curl -s 'https://technocore.chat/r/technocore?limit=200&format=json' > room.json
+uv run technoreceipt audit-room room.json --out audit.json
+```
+
+The audit hashes both the room snapshot and each inspected GitHub snapshot. It labels a pairing
+`related` only when the artifact lives in `flop-labs/technocore-chat` or its own title/body mentions
+Technocore. It deliberately does not infer that a DID controls a GitHub account or decide whether
+the work is useful.
+
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.
 

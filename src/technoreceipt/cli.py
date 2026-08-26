@@ -9,6 +9,7 @@ from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 
+from .audit import audit_room_snapshot
 from .did import create_key, load_key, public_did, sign_receipt, verify_receipt
 from .evidence import assess
 from .github import GitHubClient, parse_url
@@ -57,6 +58,12 @@ def main() -> None:
     verify = commands.add_parser("verify", help="verify a receipt without network access")
     verify.add_argument("receipt", type=Path)
 
+    audit = commands.add_parser(
+        "audit-room", help="check GitHub evidence pairings in a Technocore room snapshot"
+    )
+    audit.add_argument("snapshot", type=Path)
+    audit.add_argument("--out", type=Path)
+
     args = parser.parse_args()
     if args.command == "keygen":
         print(create_key(args.key, _passphrase(confirm=True)))
@@ -67,6 +74,23 @@ def main() -> None:
         except (binascii.Error, TypeError, ValueError, InvalidSignature) as exc:
             raise SystemExit(f"INVALID: {exc}") from exc
         print("VALID")
+        return
+    if args.command == "audit-room":
+        report = audit_room_snapshot(_json(args.snapshot), GitHubClient())
+        rendered = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
+        if args.out:
+            if args.out.exists():
+                raise SystemExit(f"refusing to overwrite existing report: {args.out}")
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(rendered)
+            print(
+                f"audited {report['evidence_url_count']} evidence URLs: "
+                f"{report['counts']['related']} related, "
+                f"{report['counts']['unrelated']} unrelated, "
+                f"{report['counts']['error']} errors -> {args.out}"
+            )
+        else:
+            print(rendered, end="")
         return
 
     snapshot = GitHubClient().snapshot(parse_url(args.url))
