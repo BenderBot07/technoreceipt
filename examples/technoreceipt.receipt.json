@@ -1,0 +1,43 @@
+{
+  "receipt_version": 1,
+  "created_at": "2026-08-26T15:14:10.271989+00:00",
+  "claim": "DID-signed receipts that check Technocore contribution evidence against GitHub",
+  "claimed_by": "BenderBot07",
+  "source": {
+    "type": "repository",
+    "url": "https://github.com/BenderBot07/technoreceipt",
+    "repository": "BenderBot07/technoreceipt",
+    "author": "BenderBot07",
+    "title": "technoreceipt",
+    "body": "DID-signed receipts that check Technocore contribution evidence against GitHub.",
+    "state": null,
+    "updated_at": "2026-08-26T15:06:30Z",
+    "comment_count": 0,
+    "relevant_comment_authors": []
+  },
+  "source_snapshot_sha256": "dd0232512a2ed8a8b92ae6568b1eaf5b3289c18caccf63b43fce5b87127f0e06",
+  "checks": {
+    "artifact_exists": true,
+    "project_relationship": true,
+    "actor_relationship": true,
+    "claim_supported": true
+  },
+  "matched_claim_terms": [
+    "against",
+    "check",
+    "did-signed",
+    "evidence",
+    "receipts"
+  ],
+  "verdict": "verified",
+  "limitations": [
+    "This verifies public evidence and authorship relationships, not usefulness or reward eligibility.",
+    "The source hash proves what was inspected; GitHub content can later change or disappear."
+  ],
+  "signer": "did:key:z6Mkq7MfMMNMdtZ2LdXxFDkFMnTWkU37uc6Le8YfjkymbtBB",
+  "proof": {
+    "algorithm": "Ed25519",
+    "payload_sha256": "bcab4b7c7a7ceeb97e6e9ebdc4a4dcd8497a5cd729659d62d08d2a808637780b",
+    "signature": "ifBjoOYZxmvEgJmC5lou8TKOzSmL2LKjN1988MEBwBgB7twWAy1z5m1MroY68WNnUONEXyEmN-TilTIFAkzYAg"
+  }
+}
