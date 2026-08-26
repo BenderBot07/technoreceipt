@@ -1,0 +1,109 @@
+from __future__ import annotations
+
+import copy
+
+import pytest
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+from technoreceipt.did import public_did, public_key_from_did, sign_receipt, verify_receipt
+from technoreceipt.evidence import assess
+from technoreceipt.github import parse_url
+
+
+def _snapshot(**overrides: object) -> dict:
+    value = {
+        "type": "issues",
+        "url": "https://github.com/flop-labs/technocore-chat/issues/66",
+        "repository": "flop-labs/technocore-chat",
+        "author": "alice",
+        "title": "Keep signed records independently verifiable",
+        "body": "Persist the Ed25519 signature on signed messages.",
+        "state": "open",
+        "updated_at": "2026-08-25T00:00:00Z",
+        "comments": [],
+    }
+    value.update(overrides)
+    return value
+
+
+def test_official_authored_contribution_verifies() -> None:
+    result = assess(_snapshot(), "persist Ed25519 signatures on signed messages", "alice")
+    assert result["verdict"] == "verified"
+    assert result["checks"] == {
+        "artifact_exists": True,
+        "project_relationship": True,
+        "actor_relationship": True,
+        "claim_supported": True,
+    }
+
+
+def test_arbitrary_third_party_issue_is_rejected() -> None:
+    snapshot = _snapshot(
+        repository="apache/texera",
+        author="someone-else",
+        title="Improve Spark connector retries",
+        body="Ordinary database retry behavior.",
+        comments=[{"author": "farmer", "body": "technocore contribution", "url": "x"}],
+    )
+    result = assess(snapshot, "Technocore signed-write recovery report", "farmer")
+    assert result["verdict"] == "insufficient"
+    assert result["checks"]["project_relationship"] is False
+    assert result["checks"]["actor_relationship"] is False
+
+
+def test_official_comment_can_prove_actor_relationship() -> None:
+    snapshot = _snapshot(
+        author="maintainer",
+        comments=[
+            {
+                "author": "alice",
+                "body": "I reproduced the Ed25519 signature retention bug in Technocore.",
+                "url": "x",
+            }
+        ],
+    )
+    result = assess(snapshot, "reproduced Ed25519 signature retention", "alice")
+    assert result["verdict"] == "verified"
+
+
+def test_signed_receipt_is_offline_verifiable_and_tamper_evident() -> None:
+    key = Ed25519PrivateKey.generate()
+    unsigned = assess(_snapshot(), "persist Ed25519 signatures", "alice")
+    unsigned["signer"] = public_did(key.public_key())
+    receipt = sign_receipt(unsigned, key)
+    verify_receipt(receipt)
+
+    tampered = copy.deepcopy(receipt)
+    tampered["claim"] = "different claim"
+    with pytest.raises(ValueError, match="payload hash mismatch"):
+        verify_receipt(tampered)
+
+
+def test_receipt_rejects_unknown_algorithm() -> None:
+    key = Ed25519PrivateKey.generate()
+    unsigned = assess(_snapshot(), "persist Ed25519 signatures", "alice")
+    unsigned["signer"] = public_did(key.public_key())
+    receipt = sign_receipt(unsigned, key)
+    receipt["proof"]["algorithm"] = "not-ed25519"
+    with pytest.raises(ValueError, match="unsupported proof algorithm"):
+        verify_receipt(receipt)
+
+
+def test_did_round_trip() -> None:
+    key = Ed25519PrivateKey.generate()
+    did = public_did(key.public_key())
+    original = key.public_key().public_bytes_raw()
+    assert public_key_from_did(did).public_bytes_raw() == original
+
+
+@pytest.mark.parametrize(
+    "url,kind",
+    [
+        ("https://github.com/flop-labs/technocore-chat", "repository"),
+        ("https://github.com/flop-labs/technocore-chat/issues/66", "issues"),
+        ("https://github.com/flop-labs/technocore-chat/pull/93", "pull"),
+        ("https://github.com/flop-labs/technocore-chat/commit/abc123", "commit"),
+    ],
+)
+def test_parse_supported_urls(url: str, kind: str) -> None:
+    assert parse_url(url).kind == kind
