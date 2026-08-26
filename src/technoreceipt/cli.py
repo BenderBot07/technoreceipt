@@ -10,6 +10,7 @@ from pathlib import Path
 from cryptography.exceptions import InvalidSignature
 
 from .audit import audit_room_snapshot
+from .binding import create_github_binding
 from .did import create_key, load_key, public_did, sign_receipt, verify_receipt
 from .evidence import assess
 from .github import GitHubClient, parse_url
@@ -58,6 +59,13 @@ def main() -> None:
     verify = commands.add_parser("verify", help="verify a receipt without network access")
     verify.add_argument("receipt", type=Path)
 
+    bind = commands.add_parser(
+        "bind-github", help="create a DID-signed statement naming one GitHub account"
+    )
+    bind.add_argument("--github", required=True)
+    bind.add_argument("--key", type=Path, required=True)
+    bind.add_argument("--out", type=Path, required=True)
+
     audit = commands.add_parser(
         "audit-room", help="check GitHub evidence pairings in a Technocore room snapshot"
     )
@@ -79,6 +87,18 @@ def main() -> None:
         except (binascii.Error, TypeError, ValueError, InvalidSignature) as exc:
             raise SystemExit(f"INVALID: {exc}") from exc
         print("VALID")
+        return
+    if args.command == "bind-github":
+        key = load_key(args.key, _passphrase())
+        try:
+            binding = create_github_binding(args.github, key)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+        if args.out.exists():
+            raise SystemExit(f"refusing to overwrite existing binding: {args.out}")
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(binding, indent=2, ensure_ascii=False) + "\n")
+        print(f"bound {binding['signer']} to GitHub user {binding['github_user']}: {args.out}")
         return
     if args.command == "audit-room":
         report = audit_room_snapshot(_json(args.snapshot), GitHubClient())

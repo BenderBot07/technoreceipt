@@ -6,6 +6,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from technoreceipt.audit import audit_room_snapshot, extract_github_urls
+from technoreceipt.binding import create_github_binding
 from technoreceipt.did import public_did, public_key_from_did, sign_receipt, verify_receipt
 from technoreceipt.evidence import assess
 from technoreceipt.github import parse_url
@@ -95,6 +96,21 @@ def test_did_round_trip() -> None:
     did = public_did(key.public_key())
     original = key.public_key().public_bytes_raw()
     assert public_key_from_did(did).public_bytes_raw() == original
+
+
+def test_github_binding_is_signed_and_names_both_sides() -> None:
+    key = Ed25519PrivateKey.generate()
+    binding = create_github_binding("BenderBot07", key)
+    verify_receipt(binding)
+    assert binding["github_user"] == "BenderBot07"
+    assert binding["signer"] in binding["statement"]
+    assert "BenderBot07" in binding["statement"]
+
+
+@pytest.mark.parametrize("name", ["", "-alice", "alice-", "alice!", "a" * 40])
+def test_github_binding_rejects_invalid_account_names(name: str) -> None:
+    with pytest.raises(ValueError, match="invalid GitHub user name"):
+        create_github_binding(name, Ed25519PrivateKey.generate())
 
 
 @pytest.mark.parametrize(

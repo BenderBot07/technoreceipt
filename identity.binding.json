@@ -1,0 +1,17 @@
+{
+  "binding_version": 1,
+  "created_at": "2026-08-26T18:23:50.646579+00:00",
+  "github_user": "BenderBot07",
+  "signer": "did:key:z6Mkq7MfMMNMdtZ2LdXxFDkFMnTWkU37uc6Le8YfjkymbtBB",
+  "statement": "The holder of did:key:z6Mkq7MfMMNMdtZ2LdXxFDkFMnTWkU37uc6Le8YfjkymbtBB binds this key to the GitHub account BenderBot07 for TechnoReceipt evidence.",
+  "limitations": [
+    "The signature proves control of the DID key, not control of the GitHub account.",
+    "Publish this file in a repository owned by the named GitHub account to provide the reciprocal public relationship.",
+    "A copied file remains a valid DID statement but is not a GitHub-account proof at the copied location."
+  ],
+  "proof": {
+    "algorithm": "Ed25519",
+    "payload_sha256": "d500e55827875aa8ac481f8108af075f161115f06bb3e69982215e5a6e8208ef",
+    "signature": "lTMDA2Ari5tW61Q8PGWtchIgFDbOhlLpuVH5aeqrOnhYTsJ6X4SUomBnzEnrWepZ6UxLyixpz6i1R9UQK-tXCw"
+  }
+}

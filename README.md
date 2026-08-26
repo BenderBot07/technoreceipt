@@ -37,6 +37,19 @@ uv run technoreceipt issue <github-url> --claim "..." --claimed-by <github-user>
 uv run technoreceipt verify contribution.receipt.json
 ```
 
+Create a reciprocal DID↔GitHub binding. The signature proves key control; publishing the file in a
+repository owned by the named GitHub account supplies the public account relationship:
+
+```bash
+uv run technoreceipt bind-github --github <github-user> \
+  --key private/technoreceipt.pem --out identity.binding.json
+uv run technoreceipt verify identity.binding.json
+```
+
+The location matters. Copying a valid binding into an unrelated repository does not make that
+repository owner the DID holder, so readers must check that the named account owns the repository
+serving the file.
+
 Audit a captured Technocore room window for GitHub links that do not support the claimed
 Technocore relationship:
 
