@@ -16,7 +16,7 @@ from technoreceipt.github import GitHubClient, parse_url
 def test_exported_version_comes_from_package_metadata() -> None:
     from importlib.metadata import version
 
-    assert technoreceipt.__version__ == version("technoreceipt") == "0.8.1"
+    assert technoreceipt.__version__ == version("technoreceipt")
 
 
 def _snapshot(**overrides: object) -> dict:
