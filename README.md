@@ -54,7 +54,9 @@ The audit hashes both the room snapshot and each inspected GitHub snapshot. It l
 `related` only when the artifact lives in `flop-labs/technocore-chat` or its own title/body mentions
 Technocore. It deliberately does not infer that a DID controls a GitHub account or decide whether
 the work is useful. Without `--key` the output remains an unsigned local report; with `--key`, the
-signer DID and Ed25519 proof cover the full report, including every finding and snapshot hash.
+signer DID and Ed25519 proof cover the full report, including every finding and snapshot hash. Each
+finding preserves the public room timestamp and exact message text beside the inspected URL, so a
+reader can review what the link was presented as without recovering the already-moving room tail.
 
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.

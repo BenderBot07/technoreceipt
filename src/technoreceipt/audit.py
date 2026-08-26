@@ -46,7 +46,9 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
         for url in extract_github_urls(text):
             finding = {
                 "seq": message.get("seq"),
+                "ts": message.get("ts"),
                 "did": message.get("from"),
+                "message_text": text,
                 "url": url,
             }
             try:
@@ -74,7 +76,7 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
     for finding in findings:
         counts[finding["status"]] += 1
     return {
-        "audit_version": 1,
+        "audit_version": 2,
         "created_at": datetime.now(UTC).isoformat(),
         "room": view.get("room"),
         "room_snapshot_sha256": _sha(view),

@@ -133,6 +133,7 @@ def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
         "messages": [
             {
                 "seq": 1,
+                "ts": "2026-08-26T18:00:00Z",
                 "from": "did:key:z6MkExample",
                 "text": "Proof https://github.com/flop-labs/technocore-chat/issues/149",
             },
@@ -150,6 +151,9 @@ def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
         "unrelated",
     ]
     assert report["findings"][1]["reason"] == "artifact_has_no_technocore_relationship"
+    assert report["audit_version"] == 2
+    assert report["findings"][0]["ts"] == "2026-08-26T18:00:00Z"
+    assert report["findings"][0]["message_text"].startswith("Proof https://github.com/")
 
 
 def test_audit_report_can_be_signed_verified_and_detects_tampering() -> None:
