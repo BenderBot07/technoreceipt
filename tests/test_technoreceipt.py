@@ -218,11 +218,33 @@ def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
         "unrelated",
     ]
     assert report["findings"][1]["reason"] == "artifact_has_no_technocore_relationship"
-    assert report["audit_version"] == 3
+    assert report["audit_version"] == 4
     assert report["findings"][0]["ts"] == "2026-08-26T18:00:00Z"
     assert report["findings"][0]["from"] == "did:key:z6MkExample"
     assert report["findings"][0]["signed"] is True
     assert report["findings"][0]["message_text"].startswith("Proof https://github.com/")
+
+
+def test_audit_applies_a_verified_github_binding_to_the_artifact_actor() -> None:
+    did = "did:key:z6MkExample"
+    view = {
+        "room": "technocore",
+        "messages": [
+            {
+                "seq": 1,
+                "from": did,
+                "text": "Persist Ed25519 signatures https://github.com/flop-labs/technocore-chat/issues/66",
+            }
+        ],
+    }
+    report = audit_room_snapshot(view, _FakeGitHub(), {did: "alice"})
+    assert report["verified_github_bindings"] == [{"signer": did, "github_user": "alice"}]
+    binding = report["findings"][0]["github_binding"]
+    assert binding == {
+        "github_user": "alice",
+        "actor_relationship": True,
+        "claim_supported": True,
+    }
 
 
 def test_audit_does_not_label_an_unsigned_nickname_as_a_did() -> None:

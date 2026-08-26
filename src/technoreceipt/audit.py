@@ -6,7 +6,7 @@ import re
 from datetime import UTC, datetime
 from typing import Protocol
 
-from .evidence import project_relationship
+from .evidence import assess, project_relationship
 from .github import GitHubRef, parse_url
 
 _GITHUB_URL = re.compile(
@@ -30,7 +30,9 @@ def extract_github_urls(text: str) -> list[str]:
     return list(dict.fromkeys(urls))
 
 
-def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
+def audit_room_snapshot(
+    view: dict, client: SnapshotClient, github_bindings: dict[str, str] | None = None
+) -> dict:
     """Audit GitHub evidence pairings found in a Technocore room JSON snapshot."""
     messages = view.get("messages")
     if not isinstance(messages, list):
@@ -70,6 +72,14 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
                         },
                     }
                 )
+                bound_user = (github_bindings or {}).get(str(author))
+                if bound_user:
+                    checks = assess(snapshot, text, bound_user)["checks"]
+                    finding["github_binding"] = {
+                        "github_user": bound_user,
+                        "actor_relationship": checks["actor_relationship"],
+                        "claim_supported": checks["claim_supported"],
+                    }
             except (RuntimeError, TypeError, ValueError) as exc:
                 finding.update({"status": "error", "reason": str(exc)})
             findings.append(finding)
@@ -78,13 +88,17 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
     for finding in findings:
         counts[finding["status"]] += 1
     return {
-        "audit_version": 3,
+        "audit_version": 4,
         "created_at": datetime.now(UTC).isoformat(),
         "room": view.get("room"),
         "room_snapshot_sha256": _sha(view),
         "message_count": len(messages),
         "evidence_url_count": len(findings),
         "counts": counts,
+        "verified_github_bindings": [
+            {"signer": signer, "github_user": user}
+            for signer, user in sorted((github_bindings or {}).items())
+        ],
         "findings": findings,
         "limitations": [
             "Related means the GitHub artifact is in the official repository or mentions Technocore itself.",

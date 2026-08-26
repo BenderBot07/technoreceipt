@@ -65,6 +65,11 @@ uv run technoreceipt audit-room room.json --out audit.json
 uv run technoreceipt audit-room room.json --key private/technoreceipt.pem \
   --out audit.signed.json
 uv run technoreceipt verify audit.signed.json
+
+# Apply one or more reciprocal bindings while auditing.
+uv run technoreceipt audit-room room.json \
+  --github-binding https://github.com/<user>/<repo>/blob/<40-char-commit>/identity.binding.json \
+  --out audit.with-bindings.json
 ```
 
 The audit hashes both the room snapshot and each inspected GitHub snapshot. It labels a pairing
@@ -76,7 +81,9 @@ finding preserves the public room timestamp and exact message text beside the in
 reader can review what the link was presented as without recovering the already-moving room tail.
 Unsupported deep links such as Actions runs and repository files are ignored rather than silently
 downgraded to the repository root. The original `from` value is preserved and `signed` is true only
-when that value is a `did:key`; unsigned nicknames are never relabeled as DIDs.
+when that value is a `did:key`; unsigned nicknames are never relabeled as DIDs. A verified GitHub
+binding adds separate `actor_relationship` and `claim_supported` checks to that finding. It does not
+upgrade the broader `related` label or hide a failed actor match.
 
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.

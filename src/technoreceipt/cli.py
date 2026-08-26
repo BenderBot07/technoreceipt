@@ -82,6 +82,13 @@ def main() -> None:
         type=Path,
         help="sign the audit for offline verification with an encrypted Ed25519 key",
     )
+    audit.add_argument(
+        "--github-binding",
+        action="append",
+        default=[],
+        metavar="IMMUTABLE_URL",
+        help="verify and apply a DID-to-GitHub binding; may be repeated",
+    )
 
     args = parser.parse_args()
     if args.command == "keygen":
@@ -120,7 +127,21 @@ def main() -> None:
         print(f"VALID GITHUB BINDING: {result['github_user']} <-> {result['signer']}")
         return
     if args.command == "audit-room":
-        report = audit_room_snapshot(_json(args.snapshot), GitHubClient())
+        client = GitHubClient()
+        bindings = {}
+        for url in args.github_binding:
+            try:
+                binding = verify_github_binding_url(url, client)
+            except (
+                binascii.Error,
+                json.JSONDecodeError,
+                TypeError,
+                ValueError,
+                InvalidSignature,
+            ) as exc:
+                raise SystemExit(f"INVALID GITHUB BINDING: {exc}") from exc
+            bindings[binding["signer"]] = binding["github_user"]
+        report = audit_room_snapshot(_json(args.snapshot), client, bindings)
         if args.key:
             key = load_key(args.key, _passphrase())
             report["signer"] = public_did(key.public_key())
