@@ -44,10 +44,12 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
         if not isinstance(text, str):
             continue
         for url in extract_github_urls(text):
+            author = message.get("from")
             finding = {
                 "seq": message.get("seq"),
                 "ts": message.get("ts"),
-                "did": message.get("from"),
+                "from": author,
+                "signed": isinstance(author, str) and author.startswith("did:key:"),
                 "message_text": text,
                 "url": url,
             }
@@ -76,7 +78,7 @@ def audit_room_snapshot(view: dict, client: SnapshotClient) -> dict:
     for finding in findings:
         counts[finding["status"]] += 1
     return {
-        "audit_version": 2,
+        "audit_version": 3,
         "created_at": datetime.now(UTC).isoformat(),
         "room": view.get("room"),
         "room_snapshot_sha256": _sha(view),

@@ -58,7 +58,8 @@ signer DID and Ed25519 proof cover the full report, including every finding and 
 finding preserves the public room timestamp and exact message text beside the inspected URL, so a
 reader can review what the link was presented as without recovering the already-moving room tail.
 Unsupported deep links such as Actions runs and repository files are ignored rather than silently
-downgraded to the repository root.
+downgraded to the repository root. The original `from` value is preserved and `signed` is true only
+when that value is a `did:key`; unsigned nicknames are never relabeled as DIDs.
 
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.

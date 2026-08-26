@@ -159,9 +159,28 @@ def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
         "unrelated",
     ]
     assert report["findings"][1]["reason"] == "artifact_has_no_technocore_relationship"
-    assert report["audit_version"] == 2
+    assert report["audit_version"] == 3
     assert report["findings"][0]["ts"] == "2026-08-26T18:00:00Z"
+    assert report["findings"][0]["from"] == "did:key:z6MkExample"
+    assert report["findings"][0]["signed"] is True
     assert report["findings"][0]["message_text"].startswith("Proof https://github.com/")
+
+
+def test_audit_does_not_label_an_unsigned_nickname_as_a_did() -> None:
+    view = {
+        "room": "technocore",
+        "messages": [
+            {
+                "seq": 1,
+                "from": "self-asserted-nick",
+                "text": "Proof https://github.com/example/site/issues/42",
+            }
+        ],
+    }
+    finding = audit_room_snapshot(view, _FakeGitHub())["findings"][0]
+    assert finding["from"] == "self-asserted-nick"
+    assert finding["signed"] is False
+    assert "did" not in finding
 
 
 def test_audit_report_can_be_signed_verified_and_detects_tampering() -> None:
