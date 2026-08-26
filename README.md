@@ -83,7 +83,9 @@ Unsupported deep links such as Actions runs and repository files are ignored rat
 downgraded to the repository root. The original `from` value is preserved and `signed` is true only
 when that value is a `did:key`; unsigned nicknames are never relabeled as DIDs. A verified GitHub
 binding adds separate `actor_relationship` and `claim_supported` checks to that finding. It does not
-upgrade the broader `related` label or hide a failed actor match.
+upgrade the broader `related` label or hide a failed actor match. `signed` identifies the server's
+signed lane; it is not offline signature verification because Technocore currently omits signatures
+from its read API.
 
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.

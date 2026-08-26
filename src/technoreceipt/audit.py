@@ -103,6 +103,7 @@ def audit_room_snapshot(
         "limitations": [
             "Related means the GitHub artifact is in the official repository or mentions Technocore itself.",
             "This does not prove DID-to-GitHub ownership, usefulness, intent, or reward eligibility.",
+            "Signed records identify Technocore's signed lane, but the read API omits signatures so the room record cannot be re-verified offline.",
             "A room snapshot may be incomplete because Technocore is an ephemeral bounded ring.",
         ],
     }

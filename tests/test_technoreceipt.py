@@ -262,6 +262,8 @@ def test_audit_does_not_label_an_unsigned_nickname_as_a_did() -> None:
     assert finding["from"] == "self-asserted-nick"
     assert finding["signed"] is False
     assert "did" not in finding
+    report = audit_room_snapshot(view, _FakeGitHub())
+    assert any("read API omits signatures" in item for item in report["limitations"])
 
 
 def test_audit_report_can_be_signed_verified_and_detects_tampering() -> None:
