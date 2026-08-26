@@ -46,6 +46,8 @@ class GitHubClient:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
             raise RuntimeError(f"GitHub API returned {exc.code} for {path}") from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError(f"GitHub API request failed for {path}: {exc.reason}") from exc
 
     def snapshot(self, ref: GitHubRef) -> dict:
         base = f"/repos/{ref.owner}/{ref.repo}"

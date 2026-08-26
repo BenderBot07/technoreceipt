@@ -1,6 +1,6 @@
 [project]
 name = "technoreceipt"
-version = "0.8.1"
+version = "0.8.2"
 description = "Deterministic, DID-signed receipts for Technocore contribution evidence"
 requires-python = ">=3.11"
 dependencies = ["cryptography>=45"]

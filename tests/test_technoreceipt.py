@@ -176,6 +176,18 @@ def test_github_file_decoder_accepts_api_line_wrapping(monkeypatch) -> None:
     assert client.file_bytes("owner", "repo", "binding.json", "a" * 40) == b"hello"
 
 
+def test_github_transport_failure_becomes_a_scoped_runtime_error(monkeypatch) -> None:
+    import urllib.error
+    import urllib.request
+
+    def fail(request, timeout):
+        raise urllib.error.URLError("DNS unavailable")
+
+    monkeypatch.setattr(urllib.request, "urlopen", fail)
+    with pytest.raises(RuntimeError, match="GitHub API request failed.*DNS unavailable"):
+        GitHubClient().snapshot(parse_url("https://github.com/example/project/issues/1"))
+
+
 class _FakeGitHub:
     def snapshot(self, ref: object) -> dict:
         repo = f"{ref.owner}/{ref.repo}"
