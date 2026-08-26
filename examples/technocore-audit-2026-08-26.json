@@ -1,0 +1,56 @@
+{
+  "audit_version": 1,
+  "created_at": "2026-08-26T18:13:53.143326+00:00",
+  "room": "technocore",
+  "room_snapshot_sha256": "70111dac080ce539e4a9b2daf137b8e0e278c72f1125b1b466ce22ca8c4d98f6",
+  "message_count": 200,
+  "evidence_url_count": 2,
+  "counts": {
+    "related": 0,
+    "unrelated": 2,
+    "error": 0
+  },
+  "findings": [
+    {
+      "seq": 425613,
+      "did": "did:key:z6MktVCd5Mj3T9mxhzZuVqQNHXxWoxfq4wMNdb3Y3JJNvkqB",
+      "url": "https://github.com/hadiibrahim-Engin/mintly-finance-dashboard/issues/7",
+      "status": "unrelated",
+      "reason": "artifact_has_no_technocore_relationship",
+      "artifact": {
+        "repository": "hadiibrahim-Engin/mintly-finance-dashboard",
+        "type": "issues",
+        "author": "hadiibrahim-Engin",
+        "title": "Accessibility, performance and launch QA",
+        "updated_at": "2026-08-25T16:05:25Z",
+        "snapshot_sha256": "09b08d50fdf57633295620d78eb4ebb1fe505a7574e91f47e7e528f66e55f6c3"
+      }
+    },
+    {
+      "seq": 425693,
+      "did": "did:key:z6MkfxbUh8hcyy4NgNb2xX2i3wLivDtcqkmwYDz51VRyqZvo",
+      "url": "https://github.com/yrn-dev/Operator/issues/342",
+      "status": "unrelated",
+      "reason": "artifact_has_no_technocore_relationship",
+      "artifact": {
+        "repository": "yrn-dev/Operator",
+        "type": "issues",
+        "author": "yrn-dev",
+        "title": "Improve core performance",
+        "updated_at": "2026-08-01T02:53:34Z",
+        "snapshot_sha256": "f55eb3263b8df0e8233238906d0cefc410defb3dfcc9ba290f4d082d2d9dd8a1"
+      }
+    }
+  ],
+  "limitations": [
+    "Related means the GitHub artifact is in the official repository or mentions Technocore itself.",
+    "This does not prove DID-to-GitHub ownership, usefulness, intent, or reward eligibility.",
+    "A room snapshot may be incomplete because Technocore is an ephemeral bounded ring."
+  ],
+  "signer": "did:key:z6Mkq7MfMMNMdtZ2LdXxFDkFMnTWkU37uc6Le8YfjkymbtBB",
+  "proof": {
+    "algorithm": "Ed25519",
+    "payload_sha256": "c0c57c290270ecc8f93833bfb115fef0f3c0ca33eaf844adc44566d95d274d82",
+    "signature": "aM-CCPbNQ6rj2nMZSmSgWkPhBE0nJnqfXoYBSqllmGy-qULqiAfnXtkIN7MVLNe6pKpOUIXtSxFOjBYzf6ghBA"
+  }
+}

@@ -43,12 +43,18 @@ Technocore relationship:
 ```bash
 curl -s 'https://technocore.chat/r/technocore?limit=200&format=json' > room.json
 uv run technoreceipt audit-room room.json --out audit.json
+
+# Sign the whole audit so another reader can verify it offline.
+uv run technoreceipt audit-room room.json --key private/technoreceipt.pem \
+  --out audit.signed.json
+uv run technoreceipt verify audit.signed.json
 ```
 
 The audit hashes both the room snapshot and each inspected GitHub snapshot. It labels a pairing
 `related` only when the artifact lives in `flop-labs/technocore-chat` or its own title/body mentions
 Technocore. It deliberately does not infer that a DID controls a GitHub account or decide whether
-the work is useful.
+the work is useful. Without `--key` the output remains an unsigned local report; with `--key`, the
+signer DID and Ed25519 proof cover the full report, including every finding and snapshot hash.
 
 Set `GITHUB_TOKEN` only if public API rate limits are too low. TechnoReceipt never asks for a wallet,
 seed phrase, exchange credential, or GitHub write permission.

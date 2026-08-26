@@ -63,6 +63,11 @@ def main() -> None:
     )
     audit.add_argument("snapshot", type=Path)
     audit.add_argument("--out", type=Path)
+    audit.add_argument(
+        "--key",
+        type=Path,
+        help="sign the audit for offline verification with an encrypted Ed25519 key",
+    )
 
     args = parser.parse_args()
     if args.command == "keygen":
@@ -77,6 +82,10 @@ def main() -> None:
         return
     if args.command == "audit-room":
         report = audit_room_snapshot(_json(args.snapshot), GitHubClient())
+        if args.key:
+            key = load_key(args.key, _passphrase())
+            report["signer"] = public_did(key.public_key())
+            report = sign_receipt(report, key)
         rendered = json.dumps(report, indent=2, ensure_ascii=False) + "\n"
         if args.out:
             if args.out.exists():

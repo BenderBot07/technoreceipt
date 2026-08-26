@@ -152,6 +152,19 @@ def test_audit_room_snapshot_separates_related_and_unrelated_evidence() -> None:
     assert report["findings"][1]["reason"] == "artifact_has_no_technocore_relationship"
 
 
+def test_audit_report_can_be_signed_verified_and_detects_tampering() -> None:
+    key = Ed25519PrivateKey.generate()
+    report = audit_room_snapshot({"room": "technocore", "messages": []}, _FakeGitHub())
+    report["signer"] = public_did(key.public_key())
+    signed = sign_receipt(report, key)
+    verify_receipt(signed)
+
+    tampered = copy.deepcopy(signed)
+    tampered["counts"]["related"] = 1
+    with pytest.raises(ValueError, match="payload hash mismatch"):
+        verify_receipt(tampered)
+
+
 def test_audit_room_snapshot_requires_messages_array() -> None:
     with pytest.raises(TypeError, match="messages array"):
         audit_room_snapshot({"room": "technocore"}, _FakeGitHub())
