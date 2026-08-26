@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -63,6 +64,17 @@ class GitHubClient:
         if not isinstance(artifact, dict) or not isinstance(comments, list):
             raise TypeError("unexpected GitHub API response")
         return _normalize(ref, artifact, comments)
+
+    def file_bytes(self, owner: str, repo: str, path: str, ref: str) -> bytes:
+        artifact = self._get(f"/repos/{owner}/{repo}/contents/{path}?ref={ref}")
+        if not isinstance(artifact, dict) or artifact.get("type") != "file":
+            raise TypeError("GitHub binding URL did not resolve to a file")
+        content = artifact.get("content")
+        if artifact.get("encoding") != "base64" or not isinstance(content, str):
+            raise TypeError("unexpected GitHub file encoding")
+        # The contents API wraps base64 at 60 characters. Remove only formatting whitespace;
+        # validate=True still refuses any non-base64 byte after that normalization.
+        return base64.b64decode("".join(content.split()), validate=True)
 
 
 def _login(value: object) -> str | None:

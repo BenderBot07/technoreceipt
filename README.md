@@ -44,11 +44,15 @@ repository owned by the named GitHub account supplies the public account relatio
 uv run technoreceipt bind-github --github <github-user> \
   --key private/technoreceipt.pem --out identity.binding.json
 uv run technoreceipt verify identity.binding.json
+
+# Verify both sides from an immutable GitHub file URL.
+uv run technoreceipt verify-github-binding \
+  https://github.com/<github-user>/<repo>/blob/<40-char-commit>/identity.binding.json
 ```
 
-The location matters. Copying a valid binding into an unrelated repository does not make that
-repository owner the DID holder, so readers must check that the named account owns the repository
-serving the file.
+The location matters. `verify-github-binding` therefore requires a full 40-character commit rather
+than a moving branch, verifies the DID signature, and checks that the account named inside the file
+owns the repository serving it. Copying a valid binding elsewhere fails that owner check.
 
 Audit a captured Technocore room window for GitHub links that do not support the claimed
 Technocore relationship:

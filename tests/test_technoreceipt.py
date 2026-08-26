@@ -6,10 +6,10 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from technoreceipt.audit import audit_room_snapshot, extract_github_urls
-from technoreceipt.binding import create_github_binding
+from technoreceipt.binding import create_github_binding, verify_github_binding_url
 from technoreceipt.did import public_did, public_key_from_did, sign_receipt, verify_receipt
 from technoreceipt.evidence import assess
-from technoreceipt.github import parse_url
+from technoreceipt.github import GitHubClient, parse_url
 
 
 def _snapshot(**overrides: object) -> dict:
@@ -113,6 +113,39 @@ def test_github_binding_rejects_invalid_account_names(name: str) -> None:
         create_github_binding(name, Ed25519PrivateKey.generate())
 
 
+class _FakeFileClient:
+    def __init__(self, content: bytes) -> None:
+        self.content = content
+
+    def file_bytes(self, owner: str, repo: str, path: str, ref: str) -> bytes:
+        assert (owner, repo, path, ref) == (
+            "BenderBot07",
+            "technoreceipt",
+            "binding.json",
+            "a" * 40,
+        )
+        return self.content
+
+
+def test_immutable_github_binding_verifies_both_relationships() -> None:
+    key = Ed25519PrivateKey.generate()
+    binding = create_github_binding("BenderBot07", key)
+    raw = __import__("json").dumps(binding).encode()
+    url = f"https://github.com/BenderBot07/technoreceipt/blob/{'a' * 40}/binding.json"
+    result = verify_github_binding_url(url, _FakeFileClient(raw))
+    assert result["github_user"] == "BenderBot07"
+    assert result["signer"] == public_did(key.public_key())
+
+
+def test_github_binding_rejects_a_different_repository_owner() -> None:
+    key = Ed25519PrivateKey.generate()
+    binding = create_github_binding("someone-else", key)
+    raw = __import__("json").dumps(binding).encode()
+    url = f"https://github.com/BenderBot07/technoreceipt/blob/{'a' * 40}/binding.json"
+    with pytest.raises(ValueError, match="other than the repository owner"):
+        verify_github_binding_url(url, _FakeFileClient(raw))
+
+
 @pytest.mark.parametrize(
     "url,kind",
     [
@@ -124,6 +157,16 @@ def test_github_binding_rejects_invalid_account_names(name: str) -> None:
 )
 def test_parse_supported_urls(url: str, kind: str) -> None:
     assert parse_url(url).kind == kind
+
+
+def test_github_file_decoder_accepts_api_line_wrapping(monkeypatch) -> None:
+    client = GitHubClient()
+    monkeypatch.setattr(
+        client,
+        "_get",
+        lambda path: {"type": "file", "encoding": "base64", "content": "aGVs\nbG8=\n"},
+    )
+    assert client.file_bytes("owner", "repo", "binding.json", "a" * 40) == b"hello"
 
 
 class _FakeGitHub:

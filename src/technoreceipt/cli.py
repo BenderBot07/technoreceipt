@@ -10,7 +10,7 @@ from pathlib import Path
 from cryptography.exceptions import InvalidSignature
 
 from .audit import audit_room_snapshot
-from .binding import create_github_binding
+from .binding import create_github_binding, verify_github_binding_url
 from .did import create_key, load_key, public_did, sign_receipt, verify_receipt
 from .evidence import assess
 from .github import GitHubClient, parse_url
@@ -66,6 +66,12 @@ def main() -> None:
     bind.add_argument("--key", type=Path, required=True)
     bind.add_argument("--out", type=Path, required=True)
 
+    verify_binding = commands.add_parser(
+        "verify-github-binding",
+        help="verify a DID binding at an immutable GitHub file URL",
+    )
+    verify_binding.add_argument("url")
+
     audit = commands.add_parser(
         "audit-room", help="check GitHub evidence pairings in a Technocore room snapshot"
     )
@@ -99,6 +105,19 @@ def main() -> None:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps(binding, indent=2, ensure_ascii=False) + "\n")
         print(f"bound {binding['signer']} to GitHub user {binding['github_user']}: {args.out}")
+        return
+    if args.command == "verify-github-binding":
+        try:
+            result = verify_github_binding_url(args.url, GitHubClient())
+        except (
+            binascii.Error,
+            json.JSONDecodeError,
+            TypeError,
+            ValueError,
+            InvalidSignature,
+        ) as exc:
+            raise SystemExit(f"INVALID GITHUB BINDING: {exc}") from exc
+        print(f"VALID GITHUB BINDING: {result['github_user']} <-> {result['signer']}")
         return
     if args.command == "audit-room":
         report = audit_room_snapshot(_json(args.snapshot), GitHubClient())
