@@ -5,11 +5,18 @@ import copy
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+import technoreceipt
 from technoreceipt.audit import audit_room_snapshot, extract_github_urls
 from technoreceipt.binding import create_github_binding, verify_github_binding_url
 from technoreceipt.did import public_did, public_key_from_did, sign_receipt, verify_receipt
 from technoreceipt.evidence import assess
 from technoreceipt.github import GitHubClient, parse_url
+
+
+def test_exported_version_comes_from_package_metadata() -> None:
+    from importlib.metadata import version
+
+    assert technoreceipt.__version__ == version("technoreceipt") == "0.8.1"
 
 
 def _snapshot(**overrides: object) -> dict:
